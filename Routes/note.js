@@ -5,7 +5,7 @@ const auth = require("../Midlleware/auth");
 const upload = require("../Midlleware/upload");
 const { v4: uuidv4 } = require("uuid");
 
-// 📌 Buat catatan baru
+// 📌 Buat catatan baruu
 router.post("/", auth, upload.array("files", 5), async (req, res) => {
     try {
         const { title, content } = req.body;
