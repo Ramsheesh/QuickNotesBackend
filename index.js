@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./Config/database');
 const authroutes = require('./Routes/auth');
-const noteroutes = require('./Routes/note');
+const noteroutes = require('./outes/note');
 // const forgotPasswordLimiter = require('./midlleware/rateLimitter');
 
 const app = express();

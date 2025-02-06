@@ -250,3 +250,5 @@ router.post("/:noteId/attachment", auth, upload.single('file'), async (req, res)
         });
     }
 });
+
+module.exports = router;
