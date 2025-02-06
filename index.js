@@ -16,9 +16,14 @@ app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
 // routes
-app.use('/auth', authroutes);
-app.use('/note', noteroutes);
-console.log('Notes routes registered');
+app.use('/api/auth', authroutes);
+app.use('/api/note', noteroutes);
+app.get("/", (req, res) => {
+    res.send({
+        message: "Backend Quick Notes",
+        author: "Ramsheessss",
+    });
+});
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
