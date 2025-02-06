@@ -1,13 +1,21 @@
 const multer = require('multer');
-const path = require('path');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: 'dsovbtcqn',
+    api_key: '723991738261599',
+    api_secret: 'lYQascciwDE1iHQ6y02WPaLIm2M',
+});
+
+// Configure multer to use CloudinaryStorage
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'notes_attachments', // Folder in your Cloudinary account to store attachments
+        allowed_formats: ['jpg', 'jpeg', 'png', 'pdf'],
     },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    }
 });
 
 const fileFilter = (req, file, cb) => {

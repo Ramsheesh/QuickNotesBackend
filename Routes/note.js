@@ -12,14 +12,14 @@ router.post("/", auth, upload.array("files", 5), async (req, res) => {
 
         const attachments = req.files?.map(file => ({
             type: file.mimetype.startsWith("image/") ? "image" : "file",
-            url: `/uploads/${file.filename}`,
+            url: file.path,  // Cloudinary URL will be available in 'file.path'
             filename: file.originalname,
             mimetype: file.mimetype,
             size: file.size,
         })) || [];
 
         const note = new Note({
-            noteId: uuidv4(), 
+            noteId: uuidv4(),
             userId: req.user._id,
             title,
             content,
@@ -169,7 +169,7 @@ router.post("/:noteId/attachment", auth, upload.single('file'), async (req, res)
 
         note.attachments.push({
             type: req.body.type || (req.file.mimetype.startsWith('image/') ? 'image' : 'file'),
-            url: `/uploads/${req.file.filename}`,
+            url: req.file.path,  // Cloudinary URL will be available in 'req.file.path'
             filename: req.file.originalname,
             mimetype: req.file.mimetype,
             size: req.file.size,
@@ -191,7 +191,3 @@ router.post("/:noteId/attachment", auth, upload.single('file'), async (req, res)
         });
     }
 });
-
-
-
-module.exports = router;
