@@ -8,45 +8,22 @@ const cloudinary = require('cloudinary');
 
 
 // 📌 Buat catatan baruu
-router.post("/", auth, upload.array("files", 5), async (req, res) => {
+// Create a new note without attachments
+router.post("/", auth, async (req, res) => {
     try {
         const { title, content } = req.body;
-        const attachments = [];
 
-        // Loop through the uploaded files and handle each file
-        for (const file of req.files) {
-            try {
-                // Upload the file buffer to Cloudinary
-                const result = await uploadToCloudinary(file.buffer);
-
-                // Push the uploaded file information into the attachments array
-                attachments.push({
-                    type: result.resource_type,
-                    url: result.secure_url, // URL of the uploaded file from Cloudinary
-                    filename: file.originalname,
-                    mimetype: file.mimetype,
-                    size: file.size,
-                });
-            } catch (error) {
-                console.error("Error uploading to Cloudinary:", error);
-                return res.status(500).json({
-                    status: "error",
-                    message: "Failed to upload file to Cloudinary",
-                    error: error.message,
-                });
-            }
-        }
-
-        // Create the new note with the uploaded attachments
+        // Create a new note with only title and content (no attachments)
         const note = new Note({
             noteId: uuidv4(),
             userId: req.user._id,
             title,
             content,
-            attachments,
+            attachments: [], // Empty array for attachments since we are not adding any
         });
 
         await note.save();
+
         res.status(201).json({
             status: "success",
             message: "Note successfully created",
@@ -61,6 +38,7 @@ router.post("/", auth, upload.array("files", 5), async (req, res) => {
         });
     }
 });
+
 
 // 📌 Ambil semua catatan user
 router.get("/", auth, async (req, res) => {
