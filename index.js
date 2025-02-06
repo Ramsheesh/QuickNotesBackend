@@ -1,10 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/database');
-const path = require('path');
 const authroutes = require('./routes/auth');
 const noteroutes = require('./routes/note');
 // const forgotPasswordLimiter = require('./midlleware/rateLimitter');
+
 const app = express();
 // Connect to Database
 connectDB();
