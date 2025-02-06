@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const Note = require("../models/note");
-const auth = require("../midlleware/auth");
-const upload = require("../midlleware/upload");
+const auth = require("../Midlleware/auth");
+const upload = require("../Midlleware/upload");
 const { v4: uuidv4 } = require("uuid");
 
 // 📌 Buat catatan baru
