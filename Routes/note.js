@@ -2,49 +2,42 @@ const express = require("express");
 const router = express.Router();
 const Note = require("../models/note");
 const auth = require("../Midlleware/auth");
-const upload = require("../Midlleware/upload");
+const { upload, uploadToCloudinary } = require("../Midlleware/upload");
 const { v4: uuidv4 } = require("uuid");
 const cloudinary = require('cloudinary');
+
+
 // 📌 Buat catatan baruu
 router.post("/", auth, upload.array("files", 5), async (req, res) => {
     try {
         const { title, content } = req.body;
-
         const attachments = [];
 
-        // Loop through each file uploaded by the user
+        // Loop through the uploaded files and handle each file
         for (const file of req.files) {
-            const uploadResult = await cloudinary.uploader.upload_stream(
-                {
-                    resource_type: 'auto', // Automatically detect the file type (image, pdf, etc.)
-                    folder: 'notes_attachments', // Folder in Cloudinary to store files
-                },
-                (error, result) => {
-                    if (error) {
-                        console.error("Error uploading to Cloudinary:", error);
-                        return res.status(500).json({
-                            status: "error",
-                            message: "Failed to upload file to Cloudinary",
-                            error: error.message,
-                        });
-                    }
+            try {
+                // Upload the file buffer to Cloudinary
+                const result = await uploadToCloudinary(file.buffer);
 
-                    // Push the file info into the attachments array
-                    attachments.push({
-                        type: result.resource_type,
-                        url: result.secure_url, // Cloudinary URL
-                        filename: file.originalname,
-                        mimetype: file.mimetype,
-                        size: file.size,
-                    });
-                }
-            );
-
-            // Pass the file to Cloudinary for upload
-            file.stream.pipe(uploadResult);
+                // Push the uploaded file information into the attachments array
+                attachments.push({
+                    type: result.resource_type,
+                    url: result.secure_url, // URL of the uploaded file from Cloudinary
+                    filename: file.originalname,
+                    mimetype: file.mimetype,
+                    size: file.size,
+                });
+            } catch (error) {
+                console.error("Error uploading to Cloudinary:", error);
+                return res.status(500).json({
+                    status: "error",
+                    message: "Failed to upload file to Cloudinary",
+                    error: error.message,
+                });
+            }
         }
 
-        // Create the note
+        // Create the new note with the uploaded attachments
         const note = new Note({
             noteId: uuidv4(),
             userId: req.user._id,
@@ -178,9 +171,8 @@ router.delete("/:noteId", auth, async (req, res) => {
 });
 
 // 📌 Tambahkan attachment ke catatan berdasarkan noteId
-router.post("/:noteId/attachment", auth, upload.single('file'), async (req, res) => {
+router.post("/:noteId/attachment", auth, upload.single("file"), async (req, res) => {
     try {
-        // Check if the file is provided
         if (!req.file) {
             return res.status(400).json({
                 status: "error",
@@ -197,52 +189,28 @@ router.post("/:noteId/attachment", auth, upload.single('file'), async (req, res)
             });
         }
 
-        // Upload the file to Cloudinary
-        cloudinary.uploader.upload_stream(
-            {
-                resource_type: 'auto', // Automatically detect the file type (image, pdf, etc.)
-                folder: 'notes_attachments', // Optional: Specify folder in Cloudinary
-            },
-            (error, result) => {
-                if (error) {
-                    console.error("Error uploading to Cloudinary:", error);
-                    return res.status(500).json({
-                        status: "error",
-                        message: "Failed to upload file to Cloudinary",
-                        error: error.message,
-                    });
-                }
+        // Upload the attachment to Cloudinary
+        const result = await uploadToCloudinary(req.file.buffer);
 
-                // Push the file info into the attachments array
-                note.attachments.push({
-                    type: req.body.type || (req.file.mimetype.startsWith('image/') ? 'image' : 'file'),
-                    url: result.secure_url,  // Cloudinary URL for the uploaded file
-                    filename: req.file.originalname,
-                    mimetype: req.file.mimetype,
-                    size: req.file.size,
-                });
+        // Push the uploaded attachment info into the note's attachments array
+        note.attachments.push({
+            type: req.body.type || (req.file.mimetype.startsWith("image/") ? "image" : "file"),
+            url: result.secure_url,  // Cloudinary URL for the uploaded file
+            filename: req.file.originalname,
+            mimetype: req.file.mimetype,
+            size: req.file.size,
+        });
 
-                // Save the note with the new attachment
-                note.save()
-                    .then(updatedNote => {
-                        res.json({
-                            status: "success",
-                            message: "Attachment successfully added",
-                            data: updatedNote,
-                        });
-                    })
-                    .catch(saveError => {
-                        console.error(saveError);
-                        res.status(500).json({
-                            status: "error",
-                            message: "Failed to save attachment",
-                            error: saveError.message,
-                        });
-                    });
-            }
-        ).end(req.file.buffer); // Pass the file buffer to Cloudinary
+        // Save the updated note
+        await note.save();
+
+        res.json({
+            status: "success",
+            message: "Attachment successfully added to note",
+            data: note,
+        });
     } catch (error) {
-        console.error(error);  
+        console.error(error);
         res.status(400).json({
             status: "error",
             message: "Failed to add attachment",
