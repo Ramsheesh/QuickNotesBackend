@@ -4,7 +4,7 @@ const Note = require("../models/note");
 const auth = require("../Midlleware/auth");
 const upload = require("../Midlleware/upload");
 const { v4: uuidv4 } = require("uuid");
-
+const cloudinary = require('cloudinary');
 // 📌 Buat catatan baruu
 router.post("/", auth, upload.array("files", 5), async (req, res) => {
     try {
