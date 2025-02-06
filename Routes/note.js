@@ -172,8 +172,7 @@ router.post("/:noteId/attachment", auth, upload.single("file"), async (req, res)
 
         // Push the uploaded attachment info into the note's attachments array
         note.attachments.push({
-            type: req.body.type || (req.file.mimetype.startsWith("image/") ? "image" : "file"),
-            url: result.secure_url,  // Cloudinary URL for the uploaded file
+            url: result.secure_url,  
             filename: req.file.originalname,
             mimetype: req.file.mimetype,
             size: req.file.size,
